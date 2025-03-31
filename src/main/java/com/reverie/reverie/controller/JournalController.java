@@ -1,0 +1,66 @@
+package com.reverie.reverie.controller;
+
+import com.reverie.reverie.model.Journal;
+import com.reverie.reverie.service.JournalService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/journal")
+@CrossOrigin
+public class JournalController {
+    private final JournalService journalService;
+
+    public JournalController(JournalService journalService) {
+        this.journalService = journalService;
+    }
+    //create a journal
+    @PostMapping("/create/{userId}")
+    public ResponseEntity<?> createJournal(@PathVariable Long userId, @RequestBody Journal journal) {
+        try {
+            Journal createdJournal = journalService.createJournal(userId, journal);
+            return new ResponseEntity<>(createdJournal, HttpStatus.CREATED);
+        } catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    //all journals from a single user
+    @GetMapping("/userjournal/{userId}")
+    public ResponseEntity<List<Journal>> getUserJournals(@PathVariable Long userId) {
+        return new ResponseEntity<>(journalService.getUserJournals(userId),HttpStatus.OK);
+    }
+    //search journal from title name for a specific user who has logged in
+    @GetMapping("journal/search")
+    public ResponseEntity<List<Journal>> searchJournal(@RequestParam Long userId,@RequestParam String keyword){
+        List<Journal> journal = journalService.searchJournal(userId,keyword);
+        System.out.println(keyword);
+        return new ResponseEntity<>(journal,HttpStatus.OK);
+    }
+
+
+    @PutMapping("updatejournal/{id}")
+    public ResponseEntity<?> updateJournal(@PathVariable Long id,@RequestBody Journal journal){
+        try {
+            Journal updatedJournal = journalService.updateJournal(id, journal);
+            return new ResponseEntity<>(updatedJournal,HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @DeleteMapping("journal/{id}")
+    public ResponseEntity<?> deleteJournal(@PathVariable Long id){
+        try {
+            journalService.deleteJournal(id);
+            return new ResponseEntity<>("Deleted!",HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        }
+    }
+
+
+}
