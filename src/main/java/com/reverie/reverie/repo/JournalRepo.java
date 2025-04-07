@@ -7,11 +7,12 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+
 @Repository
 public interface JournalRepo extends JpaRepository<Journal, Long> {
-    List<Journal> findByUserId(Long userId);
+    List<Journal> findByUserId(String userId);
+
     @Query("SELECT j FROM Journal j WHERE " +
             "j.user.id = :userId AND LOWER(j.title) LIKE LOWER(CONCAT('%', :keyword, '%'))")
-    List<Journal> searchJournal(@Param("userId") Long userId,@Param("keyword") String keyword);
-    //also search from content?
+    List<Journal> searchJournal(@Param("userId") String userId, @Param("keyword") String keyword);
 }

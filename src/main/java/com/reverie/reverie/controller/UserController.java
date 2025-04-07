@@ -6,8 +6,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
-@RequestMapping("/users")
+@RequestMapping("/api/users")  // Changed base path to be more specific
 @CrossOrigin
 public class UserController {
     private final UserService userService;
@@ -16,35 +18,43 @@ public class UserController {
         this.userService = userService;
     }
 
-    @PostMapping("/signin")
-    public ResponseEntity<?> signinUser(@RequestBody User user){
-        try{
-            User usersaved = userService.signinUserOrUpdate(user);
-            return new ResponseEntity<>(usersaved, HttpStatus.CREATED);
-        }catch (Exception e){
-            return new ResponseEntity<>("Error",HttpStatus.INTERNAL_SERVER_ERROR);
+    @GetMapping("/{id}")  // Simplified path
+    public ResponseEntity<?> getUserById(@PathVariable String id) {
+        try {
+            User user = userService.getUserById(id);
+            return new ResponseEntity<>(user, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         }
     }
-    @PutMapping("/user/{id}")
-    public ResponseEntity<String> updateUser(@PathVariable Long id, @RequestBody User user){
+
+    @GetMapping("/all")  // Changed to explicit path
+    public ResponseEntity<?> getAllUsers() {
         try {
-            userService.updateUser(id, user); // Now using the correct method
+            List<User> users = userService.getAllUsers();
+            return new ResponseEntity<>(users, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PutMapping("/{id}")  // Simplified path
+    public ResponseEntity<String> updateUser(@PathVariable String id, @RequestBody User user) {
+        try {
+            userService.updateUser(id, user);
             return new ResponseEntity<>("Updated", HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
     }
 
-    @DeleteMapping("/user/{id}")
-    public ResponseEntity<String> deleteUser(@PathVariable Long id){
+    @DeleteMapping("/{id}")  // Simplified path
+    public ResponseEntity<String> deleteUser(@PathVariable String id) {
         try {
             userService.deleteUser(id);
             return new ResponseEntity<>("User deleted successfully", HttpStatus.OK);
-        }catch (Exception e) {
+        } catch (Exception e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
-
-
     }
 }
-

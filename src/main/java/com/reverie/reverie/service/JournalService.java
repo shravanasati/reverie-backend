@@ -12,26 +12,26 @@ import java.util.List;
 public class JournalService {
     private final JournalRepo journalRepo;
     private final UserRepo userRepo;
+
     @Autowired
     public JournalService(JournalRepo journalRepo, UserRepo userRepo) {
         this.journalRepo = journalRepo;
         this.userRepo = userRepo;
     }
 
-    public Journal createJournal(Long userId, Journal journal) {
+    public Journal createJournal(String userId, Journal journal) {
         return userRepo.findById(userId).map(user -> {
             journal.setUser(user);
             return journalRepo.save(journal);
-        }).orElseThrow(() -> new RuntimeException("id not found: " + userId));
+        }).orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
     }
 
-    public List<Journal> getUserJournals(Long userId) {
+    public List<Journal> getUserJournals(String userId) {
         return journalRepo.findByUserId(userId);
     }
 
-
-    public List<Journal> searchJournal(Long userId,String keyword) {
-        return journalRepo.searchJournal(userId,keyword);
+    public List<Journal> searchJournal(String userId, String keyword) {
+        return journalRepo.searchJournal(userId, keyword);
     }
 
     public Journal updateJournal(Long id, Journal updatedJournal) {

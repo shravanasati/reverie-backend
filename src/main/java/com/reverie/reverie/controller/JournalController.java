@@ -19,7 +19,7 @@ public class JournalController {
     }
     //create a journal
     @PostMapping("/create/{userId}")
-    public ResponseEntity<?> createJournal(@PathVariable Long userId, @RequestBody Journal journal) {
+    public ResponseEntity<?> createJournal(@PathVariable String userId, @RequestBody Journal journal) {
         try {
             Journal createdJournal = journalService.createJournal(userId, journal);
             return new ResponseEntity<>(createdJournal, HttpStatus.CREATED);
@@ -30,33 +30,33 @@ public class JournalController {
 
     //all journals from a single user
     @GetMapping("/userjournal/{userId}")
-    public ResponseEntity<List<Journal>> getUserJournals(@PathVariable Long userId) {
-        return new ResponseEntity<>(journalService.getUserJournals(userId),HttpStatus.OK);
+    public ResponseEntity<List<Journal>> getUserJournals(@PathVariable String userId) {
+        return new ResponseEntity<>(journalService.getUserJournals(userId), HttpStatus.OK);
     }
     //search journal from title name for a specific user who has logged in
     @GetMapping("journal/search")
-    public ResponseEntity<List<Journal>> searchJournal(@RequestParam Long userId,@RequestParam String keyword){
-        List<Journal> journal = journalService.searchJournal(userId,keyword);
+    public ResponseEntity<List<Journal>> searchJournal(@RequestParam String userId, @RequestParam String keyword) {
+        List<Journal> journal = journalService.searchJournal(userId, keyword);
         System.out.println(keyword);
-        return new ResponseEntity<>(journal,HttpStatus.OK);
+        return new ResponseEntity<>(journal, HttpStatus.OK);
     }
 
 
     @PutMapping("updatejournal/{id}")
-    public ResponseEntity<?> updateJournal(@PathVariable Long id,@RequestBody Journal journal){
+    public ResponseEntity<?> updateJournal(@PathVariable Long id, @RequestBody Journal journal) {
         try {
             Journal updatedJournal = journalService.updateJournal(id, journal);
-            return new ResponseEntity<>(updatedJournal,HttpStatus.OK);
+            return new ResponseEntity<>(updatedJournal, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
     }
 
     @DeleteMapping("journal/{id}")
-    public ResponseEntity<?> deleteJournal(@PathVariable Long id){
+    public ResponseEntity<?> deleteJournal(@PathVariable Long id) {
         try {
             journalService.deleteJournal(id);
-            return new ResponseEntity<>("Deleted!",HttpStatus.OK);
+            return new ResponseEntity<>("Deleted!", HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         }
