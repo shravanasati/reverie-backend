@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/journal")
+@RequestMapping("/api/journals")  // Changed base path to be more specific
 @CrossOrigin
 public class JournalController {
     private final JournalService journalService;
@@ -17,8 +17,8 @@ public class JournalController {
     public JournalController(JournalService journalService) {
         this.journalService = journalService;
     }
-    //create a journal
-    @PostMapping("/create/{userId}")
+
+    @PostMapping("/{userId}")  // Simplified create endpoint
     public ResponseEntity<?> createJournal(@PathVariable String userId, @RequestBody Journal journal) {
         try {
             Journal createdJournal = journalService.createJournal(userId, journal);
@@ -28,21 +28,19 @@ public class JournalController {
         }
     }
 
-    //all journals from a single user
-    @GetMapping("/userjournal/{userId}")
+    @GetMapping("/user/{userId}")  // Updated user journals endpoint
     public ResponseEntity<List<Journal>> getUserJournals(@PathVariable String userId) {
         return new ResponseEntity<>(journalService.getUserJournals(userId), HttpStatus.OK);
     }
-    //search journal from title name for a specific user who has logged in
-    @GetMapping("journal/search")
+
+    @GetMapping("/search")  // Simplified search endpoint
     public ResponseEntity<List<Journal>> searchJournal(@RequestParam String userId, @RequestParam String keyword) {
         List<Journal> journal = journalService.searchJournal(userId, keyword);
         System.out.println(keyword);
         return new ResponseEntity<>(journal, HttpStatus.OK);
     }
 
-
-    @PutMapping("updatejournal/{id}")
+    @PutMapping("/{id}")  // Simplified update endpoint
     public ResponseEntity<?> updateJournal(@PathVariable Long id, @RequestBody Journal journal) {
         try {
             Journal updatedJournal = journalService.updateJournal(id, journal);
@@ -52,7 +50,7 @@ public class JournalController {
         }
     }
 
-    @DeleteMapping("journal/{id}")
+    @DeleteMapping("/{id}")  // Simplified delete endpoint
     public ResponseEntity<?> deleteJournal(@PathVariable Long id) {
         try {
             journalService.deleteJournal(id);
@@ -61,6 +59,4 @@ public class JournalController {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         }
     }
-
-
 }
