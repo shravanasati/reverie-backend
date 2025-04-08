@@ -7,7 +7,8 @@ import lombok.NoArgsConstructor;
 import jakarta.persistence.Id;
 import java.time.LocalDateTime;
 @Entity
-@Table(name = "journal_entries")
+@Table(name = "journal_entries",
+uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "title"}))
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

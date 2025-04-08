@@ -21,10 +21,22 @@ public class JournalService {
 
     public Journal createJournal(String userId, Journal journal) {
         return userRepo.findById(userId).map(user -> {
+            // Check if journal for the same date (title) already exists for this user
+            Journal existingJournal = journalRepo.findByUserAndTitle(user, journal.getTitle());
+
+            if (existingJournal != null) {
+                // Update the existing journal's content and timestamp
+                existingJournal.setContent(journal.getContent());
+                existingJournal.setCreatedAt(journal.getCreatedAt());
+                return journalRepo.save(existingJournal);
+            }
+
+            // Else, create new journal
             journal.setUser(user);
             return journalRepo.save(journal);
         }).orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
     }
+
 
     public List<Journal> getUserJournals(String userId) {
         return journalRepo.findByUserId(userId);
