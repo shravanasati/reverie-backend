@@ -7,8 +7,7 @@ import lombok.NoArgsConstructor;
 import jakarta.persistence.Id;
 import java.time.LocalDateTime;
 @Entity
-@Table(name = "journal_entries",
-uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "title"}))
+@Table(name = "journal_entries")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -26,6 +25,12 @@ public class Journal {
 
         @Column(nullable = false, columnDefinition = "TEXT")
         private String content;
+
+        @Column(name = "emotion")
+        private String emotion;
+
+        @Column(name = "sentiment_score")
+        private Double sentimentScore;
 
         @Column(nullable = false)
         private LocalDateTime createdAt = LocalDateTime.now();

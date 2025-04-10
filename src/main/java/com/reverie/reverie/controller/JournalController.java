@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -27,7 +28,19 @@ public class JournalController {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
     }
-
+    @GetMapping("/today/{userId}")
+    public ResponseEntity<?> getTodaysJournal(@PathVariable String userId) {
+        try {
+            LocalDateTime today = LocalDateTime.now().toLocalDate().atStartOfDay();
+            Journal journal = journalService.getJournalByUserAndDate(userId, today);
+            if (journal != null) {
+                return new ResponseEntity<>(journal, HttpStatus.OK);
+            }
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
+    }
     @GetMapping("/user/{userId}")  // Updated user journals endpoint
     public ResponseEntity<List<Journal>> getUserJournals(@PathVariable String userId) {
         return new ResponseEntity<>(journalService.getUserJournals(userId), HttpStatus.OK);

@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -18,4 +19,5 @@ public interface JournalRepo extends JpaRepository<Journal, Long> {
     List<Journal> searchJournal(@Param("userId") String userId, @Param("keyword") String keyword);
 
     Journal findByUserAndTitle(User user, String title);
+    Journal findByUserAndCreatedAtBetween(User user, LocalDateTime startOfDay, LocalDateTime endOfDay);
 }
