@@ -44,6 +44,12 @@
 		</dependency>
 
 		<dependency>
+			<groupId>net.java.dev.jna</groupId>
+			<artifactId>jna</artifactId>
+			<version>5.17.0</version>
+		</dependency>
+
+		<dependency>
             <groupId>com.kennycason</groupId>
             <artifactId>kumo-core</artifactId>
             <version>1.28</version>

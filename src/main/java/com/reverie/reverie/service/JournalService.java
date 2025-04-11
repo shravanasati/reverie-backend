@@ -5,7 +5,7 @@ import com.reverie.reverie.repo.JournalRepo;
 import com.reverie.reverie.repo.UserRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import com.reverie.reverie.service.SentimentAnalysisService;
+// import com.reverie.reverie.service.SentimentAnalysisService;
 
 
 import java.time.LocalDateTime;

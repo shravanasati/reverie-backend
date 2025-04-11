@@ -19,5 +19,8 @@ public interface JournalRepo extends JpaRepository<Journal, Long> {
     List<Journal> searchJournal(@Param("userId") String userId, @Param("keyword") String keyword);
 
     Journal findByUserAndTitle(User user, String title);
+
     Journal findByUserAndCreatedAtBetween(User user, LocalDateTime startOfDay, LocalDateTime endOfDay);
+
+    List<Journal> findByUserIdOrderByCreatedAtDesc(String userId);
 }
