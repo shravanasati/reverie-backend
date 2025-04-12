@@ -56,9 +56,9 @@ public class WordCloudService {
 				"his", "from", "they", "she", "will", "would", "there", "their", "what",
 				"about", "which", "when", "make", "like", "time", "just", "know", "take",
 				"into", "year", "your", "good", "some", "could", "them", "see", "other",
-				"than", "then", "now", "only", "come", "its", "over", "also", "back",
+				"than", "then", "now", "only", "come", "its", "also", "back",
 				"after", "use", "two", "how", "our", "work", "well", "way", "even", "new",
-				"want", "because", "any", "these", "give", "most", "custom", "stopword"));
+				"want", "because", "any", "these", "give", "most"));
 		frequencyAnalyzer.setStopWords(customStopWords);
 		// frequencyAnalyzer.setStopWords(new StopWordFilter(texts)); // Use default
 		// English stop words
