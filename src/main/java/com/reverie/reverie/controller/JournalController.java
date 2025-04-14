@@ -19,7 +19,7 @@ public class JournalController {
         this.journalService = journalService;
     }
 
-    @PostMapping("/{userId}")  // Simplified create endpoint
+    @PostMapping("/{userId}")
     public ResponseEntity<?> createJournal(@PathVariable String userId, @RequestBody Journal journal) {
         try {
             Journal createdJournal = journalService.createJournal(userId, journal);

@@ -45,7 +45,7 @@ public class SentimentAnalysisService {
                 }
 
                 JsonNode root = objectMapper.readTree(response.body().string());
-                JsonNode bestPrediction = root.get(0).get(0); // Top result
+                JsonNode bestPrediction = root.get(0).get(0); 
                 String emotion = bestPrediction.get("label").asText();
                 double score = bestPrediction.get("score").asDouble();
 

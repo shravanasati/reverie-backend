@@ -12,6 +12,30 @@ public class UserService {
     @Autowired
     private UserRepo userRepo;
 
+    public User findOrCreateGoogleUser(String id, String email, String name, String picture) {
+        return userRepo.findById(id)
+                .map(existingUser -> {
+                    existingUser.setEmail(email);
+                    existingUser.setName(name);
+                    existingUser.setImage(picture);
+                    existingUser.setEmailVerified(true);
+                    existingUser.setUpdatedAt(Instant.now());
+                    return userRepo.save(existingUser);
+                })
+                .orElseGet(() -> {
+                    User newUser = new User();
+                    newUser.setId(id);
+                    newUser.setEmail(email);
+                    newUser.setName(name);
+                    newUser.setImage(picture);
+                    newUser.setEmailVerified(true);
+                    newUser.setCreatedAt(Instant.now());
+                    newUser.setUpdatedAt(Instant.now());
+                    return userRepo.save(newUser);
+                });
+    }
+
+
     public User signinUserOrUpdate(User user) {
         user.setCreatedAt(Instant.now());
         user.setUpdatedAt(Instant.now());
