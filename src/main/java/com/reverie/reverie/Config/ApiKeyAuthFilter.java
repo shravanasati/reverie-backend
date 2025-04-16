@@ -28,13 +28,9 @@ public class ApiKeyAuthFilter implements Filter {
 
         String apiKey = httpRequest.getHeader("X-API-Key");
 
-        // Check if the request is coming from the frontend
-        String origin = httpRequest.getHeader("Origin");
-        if (origin != null && origin.equals("http://localhost:3000")) {
-            if (apiKey == null || !apiKey.equals(validApiKey)) {
-                httpResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                return;
-            }
+        if (apiKey == null || !apiKey.equals(validApiKey)) {
+            httpResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
         }
 
         filterChain.doFilter(servletRequest, servletResponse);
