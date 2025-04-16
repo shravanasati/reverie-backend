@@ -1,11 +1,14 @@
 package com.reverie.reverie.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import jakarta.persistence.Id;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+
 @Entity
 @Table(name = "journal_entries")
 @Data
@@ -33,7 +36,8 @@ public class Journal {
         private Double sentimentScore;
 
         @Column(nullable = false)
-        private LocalDateTime createdAt = LocalDateTime.now();
+        @JsonFormat(pattern = "yyyy-MM-dd")
+        private LocalDateTime createdAt;
 
 }
 

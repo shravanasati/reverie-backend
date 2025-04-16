@@ -23,42 +23,23 @@ public class JournalService {
         this.userRepo = userRepo;
         this.sentimentAnalysisService = sentimentAnalysisService;
     }
-    public Journal getJournalByUserAndDate(String userId, LocalDateTime date) {
-        return userRepo.findById(userId).map(user ->
-                journalRepo.findByUserAndCreatedAtBetween(
-                        user,
-                        date,
-                        date.plusDays(1).minusNanos(1)
-                )
-        ).orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+    public Journal getJournalByUserAndDateRange(String userId, LocalDateTime startOfDay, LocalDateTime endOfDay) {
+        return userRepo.findById(userId)
+                .map(user -> journalRepo.findByUserAndCreatedAtBetween(user, startOfDay, endOfDay))
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
     }
+
+
     public Journal createJournal(String userId, Journal journal) {
         return userRepo.findById(userId).map(user -> {
-
-            LocalDateTime journalDate = journal.getCreatedAt().toLocalDate().atStartOfDay();
-            Journal existingJournal = journalRepo.findByUserAndCreatedAtBetween(
-                    user,
-                    journalDate,
-                    journalDate.plusDays(1).minusNanos(1)
-            );
-
-            if (existingJournal != null) {
-                existingJournal.setTitle(journal.getTitle());
-                existingJournal.setContent(journal.getContent());
-                existingJournal.setCreatedAt(journal.getCreatedAt());
-                SentimentAnalysisService.SentimentAnalysis analysis =
-                        sentimentAnalysisService.analyzeSentiment(existingJournal.getContent());
-                existingJournal.setEmotion(analysis.getEmotion());
-                existingJournal.setSentimentScore(analysis.getScore());
-                return journalRepo.save(existingJournal);
-            }
-
-            // Create new journal if none exists for that day
             journal.setUser(user);
+
+            // Perform sentiment analysis
             SentimentAnalysisService.SentimentAnalysis analysis =
                     sentimentAnalysisService.analyzeSentiment(journal.getContent());
             journal.setEmotion(analysis.getEmotion());
             journal.setSentimentScore(analysis.getScore());
+
             return journalRepo.save(journal);
         }).orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
     }
@@ -77,10 +58,14 @@ public class JournalService {
                 .map(existingJournal -> {
                     existingJournal.setTitle(updatedJournal.getTitle());
                     existingJournal.setContent(updatedJournal.getContent());
+                    existingJournal.setCreatedAt(updatedJournal.getCreatedAt());
+
+                    // Perform sentiment analysis
                     SentimentAnalysisService.SentimentAnalysis analysis =
                             sentimentAnalysisService.analyzeSentiment(existingJournal.getContent());
                     existingJournal.setEmotion(analysis.getEmotion());
                     existingJournal.setSentimentScore(analysis.getScore());
+
                     return journalRepo.save(existingJournal);
                 }).orElseThrow(() -> new RuntimeException("Journal not found " + id));
     }

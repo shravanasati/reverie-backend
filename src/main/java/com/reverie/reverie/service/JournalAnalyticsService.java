@@ -8,7 +8,9 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
@@ -20,6 +22,22 @@ public class JournalAnalyticsService {
 	@Autowired
 	public JournalAnalyticsService(JournalRepo journalRepo) {
 		this.journalRepo = journalRepo;
+	}
+
+	public Map<String, Object> getJournalAnalytics(String userId) {
+		List<Journal> journals = journalRepo.findByUserIdOrderByCreatedAtDesc(userId);
+		TreeSet<LocalDateTime> journalDates = journals.stream()
+				.map(j -> j.getCreatedAt().truncatedTo(ChronoUnit.DAYS))
+				.collect(Collectors.toCollection(TreeSet::new));
+
+		Map<String, Object> analytics = new HashMap<>();
+		analytics.put("totalJournals", journals.size());
+		analytics.put("currentStreak", calculateCurrentStreak(journalDates));
+		analytics.put("longestStreak", calculateLongestStreak(journalDates));
+		analytics.put("sentiments", journals.stream().map(Journal::getEmotion).collect(Collectors.toList()));
+		analytics.put("emotionScores", journals.stream().map(Journal::getSentimentScore).collect(Collectors.toList()));
+
+		return analytics;
 	}
 
 	@Data

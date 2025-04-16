@@ -2,11 +2,14 @@ package com.reverie.reverie.controller;
 
 import com.reverie.reverie.model.Journal;
 import com.reverie.reverie.service.JournalService;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @RestController
@@ -20,25 +23,48 @@ public class JournalController {
     }
 
     @PostMapping("/{userId}")
-    public ResponseEntity<?> createJournal(@PathVariable String userId, @RequestBody Journal journal) {
+    public ResponseEntity<?> createJournal(
+            @PathVariable String userId,
+            @RequestBody Journal journal) {
         try {
+            // Convert to LocalDateTime at start of day
+            LocalDateTime dateTime = LocalDate.parse(journal.getCreatedAt().toString().split("T")[0])
+                    .atStartOfDay();
+            journal.setCreatedAt(dateTime);
+
+            // Check for existing journal
+            Journal existingJournal = journalService.getJournalByUserAndDateRange(
+                    userId,
+                    dateTime,
+                    dateTime.plusDays(1)
+            );
+
+            if (existingJournal != null) {
+                return updateJournal(existingJournal.getId(), journal);
+            }
+
             Journal createdJournal = journalService.createJournal(userId, journal);
             return new ResponseEntity<>(createdJournal, HttpStatus.CREATED);
         } catch (Exception e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
-    @GetMapping("/today/{userId}")
-    public ResponseEntity<?> getTodaysJournal(@PathVariable String userId) {
+
+    @GetMapping("/{userId}/{date}")
+    public ResponseEntity<?> getJournalByDate(
+            @PathVariable String userId,
+            @PathVariable @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date) {
         try {
-            LocalDateTime today = LocalDateTime.now().toLocalDate().atStartOfDay();
-            Journal journal = journalService.getJournalByUserAndDate(userId, today);
+            LocalDateTime startOfDay = date.atStartOfDay();
+            LocalDateTime endOfDay = date.plusDays(1).atStartOfDay();
+
+            Journal journal = journalService.getJournalByUserAndDateRange(userId, startOfDay, endOfDay);
             if (journal != null) {
-                return new ResponseEntity<>(journal, HttpStatus.OK);
+                return ResponseEntity.ok(journal);
             }
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            return ResponseEntity.notFound().build();
         } catch (Exception e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
     @GetMapping("/user/{userId}")  // Updated user journals endpoint

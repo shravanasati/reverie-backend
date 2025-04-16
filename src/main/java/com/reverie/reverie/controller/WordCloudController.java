@@ -12,7 +12,8 @@ import java.io.IOException;
 
 @RestController
 @RequestMapping("/api/wordcloud") // Base path for word cloud endpoints
-public class WordCloudController {
+public class
+WordCloudController {
 
 	private final WordCloudService wordCloudService;
 

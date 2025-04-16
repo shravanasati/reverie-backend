@@ -5,6 +5,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/journal-analytics")
 @CrossOrigin
@@ -18,10 +20,10 @@ public class JournalAnalyticsController {
 	}
 
 	@GetMapping("/{userId}")
-	public ResponseEntity<?> getJournalStats(@PathVariable String userId) {
+	public ResponseEntity<?> getJournalAnalytics(@PathVariable String userId) {
 		try {
-			JournalAnalyticsService.JournalStats stats = analyticsService.getJournalStats(userId);
-			return ResponseEntity.ok(stats);
+			Map<String, Object> analytics = analyticsService.getJournalAnalytics(userId);
+			return ResponseEntity.ok(analytics);
 		} catch (Exception e) {
 			return ResponseEntity.badRequest().body(e.getMessage());
 		}
