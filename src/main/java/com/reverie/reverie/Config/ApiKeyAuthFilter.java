@@ -27,7 +27,6 @@ public class ApiKeyAuthFilter implements Filter {
         }
 
         String apiKey = httpRequest.getHeader("X-API-Key");
-        System.out.println(apiKey);
 
         if (apiKey == null || !apiKey.equals(validApiKey)) {
             httpResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
