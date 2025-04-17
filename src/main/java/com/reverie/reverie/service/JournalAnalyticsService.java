@@ -11,6 +11,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
@@ -34,8 +35,8 @@ public class JournalAnalyticsService {
 		analytics.put("totalJournals", journals.size());
 		analytics.put("currentStreak", calculateCurrentStreak(journalDates));
 		analytics.put("longestStreak", calculateLongestStreak(journalDates));
-		analytics.put("sentiments", journals.stream().map(Journal::getEmotion).collect(Collectors.toList()));
-		analytics.put("emotionScores", journals.stream().map(Journal::getSentimentScore).collect(Collectors.toList()));
+		analytics.put("sentiments", journals.stream().map(Journal::getEmotion).filter(Objects::nonNull).collect(Collectors.toList()));
+		analytics.put("emotionScores", journals.stream().map(Journal::getSentimentScore).filter(Objects::nonNull).collect(Collectors.toList()));
 
 		return analytics;
 	}
