@@ -13,7 +13,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/journals")  // Changed base path to be more specific
+@RequestMapping("/api/journals") // Changed base path to be more specific
 @CrossOrigin
 public class JournalController {
     private final JournalService journalService;
@@ -27,17 +27,21 @@ public class JournalController {
             @PathVariable String userId,
             @RequestBody Journal journal) {
         try {
-            // Convert to LocalDateTime at start of day
-            LocalDateTime dateTime = LocalDate.parse(journal.getCreatedAt().toString().split("T")[0])
-                    .atStartOfDay();
+            // Get the date part and convert to LocalDateTime
+            LocalDateTime dateTime = journal.getCreatedAt();
+            if (dateTime == null) {
+                return ResponseEntity.badRequest().body("Created date is required");
+            }
+
+            // Ensure time is set to start of day
+            dateTime = dateTime.toLocalDate().atStartOfDay();
             journal.setCreatedAt(dateTime);
 
             // Check for existing journal
             Journal existingJournal = journalService.getJournalByUserAndDateRange(
                     userId,
                     dateTime,
-                    dateTime.plusDays(1)
-            );
+                    dateTime.plusDays(1));
 
             if (existingJournal != null) {
                 return updateJournal(existingJournal.getId(), journal);
@@ -67,19 +71,20 @@ public class JournalController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
-    @GetMapping("/user/{userId}")  // Updated user journals endpoint
+
+    @GetMapping("/user/{userId}") // Updated user journals endpoint
     public ResponseEntity<List<Journal>> getUserJournals(@PathVariable String userId) {
         return new ResponseEntity<>(journalService.getUserJournals(userId), HttpStatus.OK);
     }
 
-    @GetMapping("/search")  // Simplified search endpoint
+    @GetMapping("/search") // Simplified search endpoint
     public ResponseEntity<List<Journal>> searchJournal(@RequestParam String userId, @RequestParam String keyword) {
         List<Journal> journal = journalService.searchJournal(userId, keyword);
         System.out.println(keyword);
         return new ResponseEntity<>(journal, HttpStatus.OK);
     }
 
-    @PutMapping("/{id}")  // Simplified update endpoint
+    @PutMapping("/{id}") // Simplified update endpoint
     public ResponseEntity<?> updateJournal(@PathVariable Long id, @RequestBody Journal journal) {
         try {
             Journal updatedJournal = journalService.updateJournal(id, journal);
@@ -89,7 +94,7 @@ public class JournalController {
         }
     }
 
-    @DeleteMapping("/{id}")  // Simplified delete endpoint
+    @DeleteMapping("/{id}") // Simplified delete endpoint
     public ResponseEntity<?> deleteJournal(@PathVariable Long id) {
         try {
             journalService.deleteJournal(id);

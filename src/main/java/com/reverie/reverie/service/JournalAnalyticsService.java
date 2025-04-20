@@ -35,8 +35,8 @@ public class JournalAnalyticsService {
 		analytics.put("totalJournals", journals.size());
 		analytics.put("currentStreak", calculateCurrentStreak(journalDates));
 		analytics.put("longestStreak", calculateLongestStreak(journalDates));
-		analytics.put("sentiments", journals.stream().map(Journal::getEmotion).filter(Objects::nonNull).collect(Collectors.toList()));
-		analytics.put("emotionScores", journals.stream().map(Journal::getSentimentScore).filter(Objects::nonNull).collect(Collectors.toList()));
+		analytics.put("emotions", journals.stream().map(Journal::getEmotion).filter(Objects::nonNull).collect(Collectors.toList()));
+		analytics.put("sentiments", journals.stream().map(Journal::getSentimentScore).filter(Objects::nonNull).collect(Collectors.toList()));
 
 		return analytics;
 	}

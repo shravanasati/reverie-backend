@@ -25,8 +25,8 @@ public class JournalService {
     }
     public Journal getJournalByUserAndDateRange(String userId, LocalDateTime startOfDay, LocalDateTime endOfDay) {
         return userRepo.findById(userId)
-                .map(user -> journalRepo.findByUserAndCreatedAtBetween(user, startOfDay, endOfDay))
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+            .map(user -> journalRepo.findByUserAndCreatedAtBetween(user, startOfDay, endOfDay))
+            .orElse(null);
     }
 
 
