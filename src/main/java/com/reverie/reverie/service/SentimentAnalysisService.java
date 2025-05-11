@@ -12,44 +12,81 @@ import java.io.IOException;
 @Service
 public class SentimentAnalysisService {
 
-    private static final String API_URL = "https://api-inference.huggingface.co/models/j-hartmann/emotion-english-distilroberta-base";
+    @Value("${nlp_service.api_key}")
+    private String nlpServiceApiKey;
 
-    @Value("${huggingface.api.token}")
-    private String huggingFaceToken;
+    @Value("${nlp_service.api_host}")
+    private String nlpServiceApiHost;
+
+    @Value("${nlp_service.api_scheme}")
+    private String nlpServiceApiScheme;
+
+    @Value("${nlp_service.api_port}")
+    private String nlpServiceApiPort;
+
+    private final String API_URL = nlpServiceApiScheme + "://" + nlpServiceApiHost + ":" + nlpServiceApiPort
+            + "/analyze";
 
     private final OkHttpClient client = new OkHttpClient();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Data
-    public static class SentimentAnalysis {
+    public static class SentimentEmotionResult {
+        private final String label;
         private final double score;
-        private final String emotion;
     }
 
-    public SentimentAnalysis analyzeSentiment(String text) {
+    @Data
+    public static class TextAnalysis {
+        private final SentimentEmotionResult sentiment;
+        private final SentimentEmotionResult[] emotions;
+        private final String[] keywords;
+    }
+
+    public TextAnalysis analyzeSentiment(String text) {
         try {
-            String jsonBody = objectMapper.writeValueAsString(new HuggingFaceRequest(text));
+            String jsonBody = objectMapper.writeValueAsString(new TextAnalysisRequest(text));
 
             Request request = new Request.Builder()
                     .url(API_URL)
-                    .addHeader("Authorization", "Bearer " + huggingFaceToken)
+                    .addHeader("Authorization", "Bearer " + nlpServiceApiKey)
                     .post(RequestBody.create(
                             MediaType.parse("application/json"),
-                            jsonBody
-                    ))
+                            jsonBody))
                     .build();
 
             try (Response response = client.newCall(request).execute()) {
                 if (!response.isSuccessful()) {
-                    throw new RuntimeException("Hugging Face API error: " + response.code());
+                    throw new RuntimeException("NLP service API error: " + response.code() + " " + response.message());
                 }
 
-                JsonNode root = objectMapper.readTree(response.body().string());
-                JsonNode bestPrediction = root.get(0).get(0); 
-                String emotion = bestPrediction.get("label").asText();
-                double score = bestPrediction.get("score").asDouble();
+                String responseBody = response.body().string();
+                JsonNode root = objectMapper.readTree(responseBody);
 
-                return new SentimentAnalysis(score, emotion);
+                // Parse sentiment
+                JsonNode sentimentNode = root.path("sentiment");
+                SentimentEmotionResult sentiment = new SentimentEmotionResult(
+                        sentimentNode.path("label").asText(),
+                        sentimentNode.path("score").asDouble());
+
+                // Parse emotions
+                JsonNode emotionsNode = root.path("emotions");
+                SentimentEmotionResult[] emotions = new SentimentEmotionResult[emotionsNode.size()];
+                for (int i = 0; i < emotionsNode.size(); i++) {
+                    JsonNode emotionNode = emotionsNode.get(i);
+                    emotions[i] = new SentimentEmotionResult(
+                            emotionNode.path("label").asText(),
+                            emotionNode.path("score").asDouble());
+                }
+
+                // Parse keywords
+                JsonNode keywordsNode = root.path("keywords");
+                String[] keywords = new String[keywordsNode.size()];
+                for (int i = 0; i < keywordsNode.size(); i++) {
+                    keywords[i] = keywordsNode.get(i).asText();
+                }
+
+                return new TextAnalysis(sentiment, emotions, keywords);
             }
         } catch (IOException e) {
             throw new RuntimeException("Failed to analyze sentiment: " + e.getMessage(), e);
@@ -57,7 +94,7 @@ public class SentimentAnalysisService {
     }
 
     @Data
-    static class HuggingFaceRequest {
-        private final String inputs;
+    static class TextAnalysisRequest {
+        private final String text;
     }
 }
