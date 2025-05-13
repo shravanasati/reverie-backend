@@ -30,15 +30,8 @@ public class Journal {
         @Column(nullable = false, columnDefinition = "TEXT")
         private String content;
 
-        @Column(name = "emotion")
-        private String emotion;
-
-        @Column(name = "sentiment_score")
-        private Double sentimentScore;
-
         @Column(nullable = false)
         @JsonFormat(pattern = "yyyy-MM-dd")
         @JsonDeserialize(using = LocalDateTimeDeserializer.class)
         private LocalDateTime createdAt;
-
 }

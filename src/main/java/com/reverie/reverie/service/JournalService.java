@@ -1,13 +1,10 @@
 package com.reverie.reverie.service;
 
-import com.reverie.reverie.model.Journal;
-import com.reverie.reverie.repo.JournalRepo;
-import com.reverie.reverie.repo.UserRepo;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.reverie.reverie.model.*;
+import com.reverie.reverie.repo.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-// import com.reverie.reverie.service.SentimentAnalysisService;
-
-
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -16,34 +13,116 @@ public class JournalService {
     private final JournalRepo journalRepo;
     private final UserRepo userRepo;
     private final SentimentAnalysisService sentimentAnalysisService;
+    private final SentimentsRepo sentimentsRepo;
+    private final EmotionsRepo emotionsRepo;
+    private final KeywordsRepo keywordsRepo;
+    private final JournalKeywordsRepo journalKeywordsRepo;
+    private final ObjectMapper objectMapper;
 
     @Autowired
-    public JournalService(JournalRepo journalRepo, UserRepo userRepo,SentimentAnalysisService sentimentAnalysisService) {
+    public JournalService(JournalRepo journalRepo,
+                          UserRepo userRepo,
+                          SentimentAnalysisService sentimentAnalysisService,
+                          SentimentsRepo sentimentsRepo,
+                          EmotionsRepo emotionsRepo,
+                          KeywordsRepo keywordsRepo,
+                          JournalKeywordsRepo journalKeywordsRepo,
+                          ObjectMapper objectMapper) {
         this.journalRepo = journalRepo;
         this.userRepo = userRepo;
         this.sentimentAnalysisService = sentimentAnalysisService;
-    }
-    public Journal getJournalByUserAndDateRange(String userId, LocalDateTime startOfDay, LocalDateTime endOfDay) {
-        return userRepo.findById(userId)
-            .map(user -> journalRepo.findByUserAndCreatedAtBetween(user, startOfDay, endOfDay))
-            .orElse(null);
+        this.sentimentsRepo = sentimentsRepo;
+        this.emotionsRepo = emotionsRepo;
+        this.keywordsRepo = keywordsRepo;
+        this.journalKeywordsRepo = journalKeywordsRepo;
+        this.objectMapper = objectMapper;
     }
 
+    public Journal getJournalByUserAndDateRange(String userId, LocalDateTime startOfDay, LocalDateTime endOfDay) {
+        return userRepo.findById(userId)
+                .map(user -> journalRepo.findByUserAndCreatedAtBetween(user, startOfDay, endOfDay))
+                .orElse(null);
+    }
 
     public Journal createJournal(String userId, Journal journal) {
         return userRepo.findById(userId).map(user -> {
             journal.setUser(user);
+            Journal saved = journalRepo.save(journal);
 
-            // Perform sentiment analysis
-            SentimentAnalysisService.SentimentAnalysis analysis =
-                    sentimentAnalysisService.analyzeSentiment(journal.getContent());
-            journal.setEmotion(analysis.getEmotion());
-            journal.setSentimentScore(analysis.getScore());
+            SentimentAnalysisService.TextAnalysis analysis = sentimentAnalysisService.analyzeSentiment(journal.getContent());
 
-            return journalRepo.save(journal);
+            // Save sentiment
+            Sentiments sentiment = new Sentiments();
+            sentiment.setJournal(saved);
+            sentiment.setLabel(analysis.getSentiment().getLabel());
+            sentiment.setScore(analysis.getSentiment().getScore());
+            sentimentsRepo.save(sentiment);
+
+            // Save emotions
+            for (SentimentAnalysisService.SentimentEmotionResult emo : analysis.getEmotions()) {
+                Emotions emotion = new Emotions();
+                emotion.setJournal(saved);
+                emotion.setLabel(emo.getLabel());
+                emotion.setScore(emo.getScore());
+                emotionsRepo.save(emotion);
+            }
+
+            // Save keywords
+            for (String keyword : analysis.getKeywords()) {
+                Keywords keywordEntity = keywordsRepo.findByWord(keyword)
+                        .orElseGet(() -> keywordsRepo.save(new Keywords(null, keyword)));
+
+                Journal_keywords link = new Journal_keywords(saved, keywordEntity);
+                journalKeywordsRepo.save(link);
+            }
+
+            return saved;
         }).orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
     }
 
+    public Journal updateJournal(Long id, Journal updatedJournal) {
+        return journalRepo.findById(id).map(existingJournal -> {
+            existingJournal.setTitle(updatedJournal.getTitle());
+            existingJournal.setContent(updatedJournal.getContent());
+            existingJournal.setCreatedAt(updatedJournal.getCreatedAt());
+            Journal saved = journalRepo.save(existingJournal);
+
+            // Clear old data
+            sentimentsRepo.deleteByJournal(existingJournal);
+            emotionsRepo.deleteByJournal(existingJournal);
+            journalKeywordsRepo.deleteByJournal(existingJournal);
+
+            // Re-analyze
+            SentimentAnalysisService.TextAnalysis analysis = sentimentAnalysisService.analyzeSentiment(saved.getContent());
+
+            // Save sentiment
+            Sentiments sentiment = new Sentiments();
+            sentiment.setJournal(saved);
+            sentiment.setLabel(analysis.getSentiment().getLabel());
+            sentiment.setScore(analysis.getSentiment().getScore());
+            sentimentsRepo.save(sentiment);
+
+            // Save emotions
+            for (SentimentAnalysisService.SentimentEmotionResult emo : analysis.getEmotions()) {
+                Emotions emotion = new Emotions();
+                emotion.setJournal(saved);
+                emotion.setLabel(emo.getLabel());
+                emotion.setScore(emo.getScore());
+                emotionsRepo.save(emotion);
+            }
+
+            // Save keywords
+            for (String keyword : analysis.getKeywords()) {
+                Keywords keywordEntity = keywordsRepo.findByWord(keyword)
+                        .orElseGet(() -> keywordsRepo.save(new Keywords(null, keyword)));
+
+                Journal_keywords link = new Journal_keywords(saved, keywordEntity);
+                journalKeywordsRepo.save(link);
+            }
+
+            return saved;
+        }).orElseThrow(() -> new RuntimeException("Journal not found " + id));
+    }
 
     public List<Journal> getUserJournals(String userId) {
         return journalRepo.findByUserId(userId);
@@ -53,27 +132,17 @@ public class JournalService {
         return journalRepo.searchJournal(userId, keyword);
     }
 
-    public Journal updateJournal(Long id, Journal updatedJournal) {
-        return journalRepo.findById(id)
-                .map(existingJournal -> {
-                    existingJournal.setTitle(updatedJournal.getTitle());
-                    existingJournal.setContent(updatedJournal.getContent());
-                    existingJournal.setCreatedAt(updatedJournal.getCreatedAt());
-
-                    // Perform sentiment analysis
-                    SentimentAnalysisService.SentimentAnalysis analysis =
-                            sentimentAnalysisService.analyzeSentiment(existingJournal.getContent());
-                    existingJournal.setEmotion(analysis.getEmotion());
-                    existingJournal.setSentimentScore(analysis.getScore());
-
-                    return journalRepo.save(existingJournal);
-                }).orElseThrow(() -> new RuntimeException("Journal not found " + id));
-    }
-
     public void deleteJournal(Long id) {
         if (!journalRepo.existsById(id)) {
             throw new RuntimeException("Journal not found " + id);
         }
+
+        // Delete all related data
+        Journal journal = journalRepo.findById(id).orElseThrow();
+        sentimentsRepo.deleteByJournal(journal);
+        emotionsRepo.deleteByJournal(journal);
+        journalKeywordsRepo.deleteByJournal(journal);
+
         journalRepo.deleteById(id);
     }
 }

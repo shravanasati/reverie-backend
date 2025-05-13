@@ -32,7 +32,7 @@ public class SentimentAnalysisService {
 
     @Data
     public static class SentimentEmotionResult {
-        private final String label;
+        private final String label;//injsonb
         private final double score;
     }
 

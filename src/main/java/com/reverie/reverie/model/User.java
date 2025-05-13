@@ -9,13 +9,11 @@ import lombok.*;
 @Entity
 @Table(name = "\"user\"") // Added quotes to escape the reserved keyword
 @Data
-@Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class User {
         @Id
-        private String id = UUID.randomUUID().toString();
+        private String id;
 
         @Column(nullable = false)
         private String name;
@@ -33,5 +31,12 @@ public class User {
 
         @Column(name = "updated_at", nullable = false)
         private Instant updatedAt;
+
+        @PrePersist
+        public void ensureId() {
+                if (this.id == null) {
+                        this.id = UUID.randomUUID().toString();
+                }
+        }
 
 }

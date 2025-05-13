@@ -35,11 +35,24 @@ public class UserService {
                 });
     }
 
-
     public User signinUserOrUpdate(User user) {
-        user.setCreatedAt(Instant.now());
-        user.setUpdatedAt(Instant.now());
-        return userRepo.save(user);
+        // Try by ID first
+        return userRepo.findById(user.getId())
+                .or(() -> userRepo.findByEmail(user.getEmail()))
+                .map(existingUser -> {
+                    existingUser.setName(user.getName());
+                    existingUser.setEmail(user.getEmail());
+                    existingUser.setImage(user.getImage());
+                    existingUser.setEmailVerified(true);
+                    existingUser.setUpdatedAt(Instant.now());
+                    return userRepo.save(existingUser);
+                })
+                .orElseGet(() -> {
+                    user.setEmailVerified(true);
+                    user.setCreatedAt(Instant.now());
+                    user.setUpdatedAt(Instant.now());
+                    return userRepo.save(user);
+                });
     }
 
     public User updateUser(String id, User updatedUser) {
