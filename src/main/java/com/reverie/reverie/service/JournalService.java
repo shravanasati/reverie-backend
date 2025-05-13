@@ -51,6 +51,8 @@ public class JournalService {
 
             SentimentAnalysisService.TextAnalysis analysis = sentimentAnalysisService.analyzeSentiment(journal.getContent());
 
+            System.out.println(analysis);
+
             // Save sentiment
             Sentiments sentiment = new Sentiments();
             sentiment.setJournal(saved);

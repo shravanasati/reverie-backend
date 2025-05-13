@@ -15,35 +15,33 @@ public class SentimentAnalysisService {
     @Value("${nlp_service.api_key}")
     private String nlpServiceApiKey;
 
-    @Value("${nlp_service.api_host}")
-    private String nlpServiceApiHost;
 
-    @Value("${nlp_service.api_scheme}")
-    private String nlpServiceApiScheme;
+    @Value("${nlp_service.api_url}")
+    private String nlpServiceApiURL;
 
-    @Value("${nlp_service.api_port}")
-    private String nlpServiceApiPort;
-
-    private final String API_URL = nlpServiceApiScheme + "://" + nlpServiceApiHost + ":" + nlpServiceApiPort
-            + "/analyze";
-
+    
     private final OkHttpClient client = new OkHttpClient();
     private final ObjectMapper objectMapper = new ObjectMapper();
-
+    
     @Data
     public static class SentimentEmotionResult {
         private final String label;//injsonb
         private final double score;
     }
-
+    
     @Data
     public static class TextAnalysis {
         private final SentimentEmotionResult sentiment;
         private final SentimentEmotionResult[] emotions;
         private final String[] keywords;
     }
-
+    
     public TextAnalysis analyzeSentiment(String text) {
+        final String API_URL = nlpServiceApiURL + "/analyze";
+        System.out.println("******************************************************");
+        System.out.println("SENTIMENT ANALYSIS");
+        System.out.println("******************************************************");
+        System.out.println(API_URL);
         try {
             String jsonBody = objectMapper.writeValueAsString(new TextAnalysisRequest(text));
 
@@ -85,6 +83,10 @@ public class SentimentAnalysisService {
                 for (int i = 0; i < keywordsNode.size(); i++) {
                     keywords[i] = keywordsNode.get(i).asText();
                 }
+
+                System.out.println("Sentiment: " + sentiment);
+                System.out.println("Emotions: " + emotions);
+                System.out.println("Keywords: " + keywords);
 
                 return new TextAnalysis(sentiment, emotions, keywords);
             }

@@ -49,7 +49,9 @@ public class JournalController {
 
             if (existing != null) {
                 // Return existing journal so frontend can update it
-                return new ResponseEntity<>(existing, HttpStatus.OK);
+                System.out.println("returning existing journal");
+                Journal updatedJournal = journalService.updateJournal(existing.getId(), journal);
+                return new ResponseEntity<>(updatedJournal, HttpStatus.OK);
             }
 
             Journal created = journalService.createJournal(userId, journal);
