@@ -38,10 +38,6 @@ public class SentimentAnalysisService {
     
     public TextAnalysis analyzeSentiment(String text) {
         final String API_URL = nlpServiceApiURL + "/analyze";
-        System.out.println("******************************************************");
-        System.out.println("SENTIMENT ANALYSIS");
-        System.out.println("******************************************************");
-        System.out.println(API_URL);
         try {
             String jsonBody = objectMapper.writeValueAsString(new TextAnalysisRequest(text));
 

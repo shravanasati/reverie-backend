@@ -12,6 +12,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 
 @RestController
 @RequestMapping("/api/journals")
@@ -36,8 +38,6 @@ public class JournalController {
             if (dateTime == null) {
                 return ResponseEntity.badRequest().body("Created date is required");
             }
-            System.out.println("userId = " + userId);
-            System.out.println("journal = " + journal);
 
             dateTime = dateTime.toLocalDate().atStartOfDay();
             journal.setCreatedAt(dateTime);
@@ -48,8 +48,6 @@ public class JournalController {
                     dateTime.plusDays(1));
 
             if (existing != null) {
-                // Return existing journal so frontend can update it
-                System.out.println("returning existing journal");
                 Journal updatedJournal = journalService.updateJournal(existing.getId(), journal);
                 return new ResponseEntity<>(updatedJournal, HttpStatus.OK);
             }
@@ -76,14 +74,23 @@ public class JournalController {
     @GetMapping("/{userId}/{date}")
     public ResponseEntity<?> getJournalByDate(
             @PathVariable String userId,
-            @PathVariable @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date) {
+            @PathVariable @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date,
+            @RequestParam(required = false, defaultValue = "false") boolean analytics) {
         try {
             LocalDateTime startOfDay = date.atStartOfDay();
             LocalDateTime endOfDay = date.plusDays(1).atStartOfDay();
 
             Journal journal = journalService.getJournalByUserAndDateRange(userId, startOfDay, endOfDay);
             if (journal != null) {
-                return ResponseEntity.ok(journal);
+                Map<String, Object> response = new HashMap<>();
+                journal.setUser(null);
+                response.put("journal", journal);
+                if (analytics) {
+                    Map<String, Object> analyticsData = journalService.getAnalyticsForJournal(journal);
+                    response.put("analytics", analyticsData);
+                    return ResponseEntity.ok(response);
+                }
+                return ResponseEntity.ok(response);
             }
             return ResponseEntity.notFound().build();
         } catch (Exception e) {

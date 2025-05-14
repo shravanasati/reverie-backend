@@ -7,6 +7,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.stream.Collectors;
 
 @Service
 public class JournalService {
@@ -21,13 +24,13 @@ public class JournalService {
 
     @Autowired
     public JournalService(JournalRepo journalRepo,
-                          UserRepo userRepo,
-                          SentimentAnalysisService sentimentAnalysisService,
-                          SentimentsRepo sentimentsRepo,
-                          EmotionsRepo emotionsRepo,
-                          KeywordsRepo keywordsRepo,
-                          JournalKeywordsRepo journalKeywordsRepo,
-                          ObjectMapper objectMapper) {
+            UserRepo userRepo,
+            SentimentAnalysisService sentimentAnalysisService,
+            SentimentsRepo sentimentsRepo,
+            EmotionsRepo emotionsRepo,
+            KeywordsRepo keywordsRepo,
+            JournalKeywordsRepo journalKeywordsRepo,
+            ObjectMapper objectMapper) {
         this.journalRepo = journalRepo;
         this.userRepo = userRepo;
         this.sentimentAnalysisService = sentimentAnalysisService;
@@ -44,12 +47,32 @@ public class JournalService {
                 .orElse(null);
     }
 
+    public Map<String, Object> getAnalyticsForJournal(Journal journal) {
+        Map<String, Object> analyticsData = new HashMap<>();
+
+        Sentiments sentiment = sentimentsRepo.findByJournal(journal).orElse(null);
+        sentiment.setJournal(null);
+        List<Emotions> emotions = emotionsRepo.findByJournal(journal);
+        emotions.forEach(emotion -> emotion.setJournal(null));
+        List<String> keywords = journalKeywordsRepo.findByJournal(journal)
+                .stream()
+                .map(jk -> jk.getKeyword().getWord())
+                .collect(Collectors.toList());
+
+        analyticsData.put("sentiment", sentiment);
+        analyticsData.put("emotions", emotions);
+        analyticsData.put("keywords", keywords);
+
+        return analyticsData;
+    }
+
     public Journal createJournal(String userId, Journal journal) {
         return userRepo.findById(userId).map(user -> {
             journal.setUser(user);
             Journal saved = journalRepo.save(journal);
 
-            SentimentAnalysisService.TextAnalysis analysis = sentimentAnalysisService.analyzeSentiment(journal.getContent());
+            SentimentAnalysisService.TextAnalysis analysis = sentimentAnalysisService
+                    .analyzeSentiment(journal.getContent());
 
             System.out.println(analysis);
 
@@ -95,7 +118,8 @@ public class JournalService {
             journalKeywordsRepo.deleteByJournal(existingJournal);
 
             // Re-analyze
-            SentimentAnalysisService.TextAnalysis analysis = sentimentAnalysisService.analyzeSentiment(saved.getContent());
+            SentimentAnalysisService.TextAnalysis analysis = sentimentAnalysisService
+                    .analyzeSentiment(saved.getContent());
 
             // Save sentiment
             Sentiments sentiment = new Sentiments();
