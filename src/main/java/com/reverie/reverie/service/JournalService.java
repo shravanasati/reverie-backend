@@ -47,6 +47,12 @@ public class JournalService {
                 .orElse(null);
     }
 
+    public Journal getJournalByUserAndDate(String userId, LocalDateTime date) {
+        return userRepo.findById(userId)
+                .map(user -> journalRepo.findByUserAndCreatedAt(user, date))
+                .orElse(null);
+    }
+
     public Map<String, Object> getAnalyticsForJournal(Journal journal) {
         Map<String, Object> analyticsData = new HashMap<>();
 

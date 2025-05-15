@@ -65,7 +65,6 @@ public class WordCloudService {
 
 		// --- 2. Calculate Word Frequencies ---
 		final List<WordFrequency> wordFrequencies = frequencyAnalyzer.load(texts);
-		System.out.println("Calculated " + wordFrequencies.size() + " word frequencies for service.");
 
 		// --- 3. Configure Word Cloud Appearance ---
 		final Dimension dimension = new Dimension(600, 300);

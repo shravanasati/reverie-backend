@@ -78,9 +78,10 @@ public class JournalController {
             @RequestParam(required = false, defaultValue = "false") boolean analytics) {
         try {
             LocalDateTime startOfDay = date.atStartOfDay();
-            LocalDateTime endOfDay = date.plusDays(1).atStartOfDay();
+            // LocalDateTime endOfDay = date.plusDays(1).atStartOfDay();
 
-            Journal journal = journalService.getJournalByUserAndDateRange(userId, startOfDay, endOfDay);
+            // Journal journal = journalService.getJournalByUserAndDateRange(userId, startOfDay, endOfDay);
+            Journal journal = journalService.getJournalByUserAndDate(userId, startOfDay);
             if (journal != null) {
                 Map<String, Object> response = new HashMap<>();
                 journal.setUser(null);

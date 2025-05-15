@@ -37,7 +37,9 @@ public class JournalAnalyticsService {
 				.collect(Collectors.toCollection(TreeSet::new));
 
 		List<Emotions> emotions = emotionsRepo.findByJournalUserId(userId);
+		emotions.forEach(e -> e.setJournal(null));
 		List<Sentiments> sentiments = sentimentsRepo.findByJournalUserId(userId);
+		sentiments.forEach(s -> s.setJournal(null));
 
 		Map<String, Object> analytics = new HashMap<>();
 		analytics.put("totalJournals", journals.size());
