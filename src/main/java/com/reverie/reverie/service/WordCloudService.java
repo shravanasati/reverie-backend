@@ -28,6 +28,12 @@ public class WordCloudService {
 
 	@Autowired
 	private JournalService journalService;
+	private final int WC_WIDTH = 1200;
+	private final int WC_HEIGHT = 600;
+	private final int WC_PADDING = 3;
+	private final int WC_NUM_WORDS = 150;
+	private final int WC_FONT_SIZE_MIN = 15;
+	private final int WC_FONT_SIZE_MAX = 60;
 
 	/**
 	 * Generates a word cloud image from the provided list of texts.
@@ -47,7 +53,7 @@ public class WordCloudService {
 
 		// --- 1. Setup Frequency Analyzer ---
 		final FrequencyAnalyzer frequencyAnalyzer = new FrequencyAnalyzer();
-		frequencyAnalyzer.setWordFrequenciesToReturn(600);
+		frequencyAnalyzer.setWordFrequenciesToReturn(WC_NUM_WORDS);
 		frequencyAnalyzer.setMinWordLength(4);
 		frequencyAnalyzer.setWordTokenizer(new WhiteSpaceWordTokenizer());
 		// Optional: Add custom stop words if needed
@@ -67,9 +73,9 @@ public class WordCloudService {
 		final List<WordFrequency> wordFrequencies = frequencyAnalyzer.load(texts);
 
 		// --- 3. Configure Word Cloud Appearance ---
-		final Dimension dimension = new Dimension(600, 300);
+		final Dimension dimension = new Dimension(WC_WIDTH, WC_HEIGHT);
 		final WordCloud wordCloud = new WordCloud(dimension, CollisionMode.PIXEL_PERFECT);
-		wordCloud.setPadding(2);
+		wordCloud.setPadding(WC_PADDING);
 		wordCloud.setBackground(new RectangleBackground(dimension));
 		wordCloud.setBackgroundColor(Color.WHITE);
 		wordCloud.setColorPalette(new ColorPalette(
@@ -79,7 +85,7 @@ public class WordCloudService {
 				new Color(0x17A589), // Teal
 				new Color(0x48C9B0) // Light Teal
 		));
-		wordCloud.setFontScalar(new LinearFontScalar(12, 45)); // Min/Max font size
+		wordCloud.setFontScalar(new LinearFontScalar(WC_FONT_SIZE_MIN, WC_FONT_SIZE_MAX)); // Min/Max font size
 		wordCloud.setKumoFont(new KumoFont("SansSerif", FontWeight.BOLD));
 
 		// --- 4. Build Word Cloud ---
