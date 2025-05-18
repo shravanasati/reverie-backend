@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -29,6 +30,7 @@ public class JournalController {
 
     // Create journal if it doesn't exist for the date
     @PostMapping("/{userId}")
+    @Transactional
     public ResponseEntity<?> createJournal(
             @PathVariable String userId,
             @RequestBody Journal journal) {
@@ -42,10 +44,9 @@ public class JournalController {
             dateTime = dateTime.toLocalDate().atStartOfDay();
             journal.setCreatedAt(dateTime);
 
-            Journal existing = journalService.getJournalByUserAndDateRange(
+            Journal existing = journalService.getJournalByUserAndDate(
                     userId,
-                    dateTime,
-                    dateTime.plusDays(1));
+                    dateTime);
 
             if (existing != null) {
                 Journal updatedJournal = journalService.updateJournal(existing.getId(), journal);
@@ -80,7 +81,8 @@ public class JournalController {
             LocalDateTime startOfDay = date.atStartOfDay();
             // LocalDateTime endOfDay = date.plusDays(1).atStartOfDay();
 
-            // Journal journal = journalService.getJournalByUserAndDateRange(userId, startOfDay, endOfDay);
+            // Journal journal = journalService.getJournalByUserAndDateRange(userId,
+            // startOfDay, endOfDay);
             Journal journal = journalService.getJournalByUserAndDate(userId, startOfDay);
             if (journal != null) {
                 Map<String, Object> response = new HashMap<>();

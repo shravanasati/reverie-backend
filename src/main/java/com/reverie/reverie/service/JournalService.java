@@ -113,43 +113,48 @@ public class JournalService {
 
     public Journal updateJournal(Long id, Journal updatedJournal) {
         return journalRepo.findById(id).map(existingJournal -> {
+            final boolean contentChanged = !existingJournal.getContent().equals(updatedJournal.getContent());
             existingJournal.setTitle(updatedJournal.getTitle());
             existingJournal.setContent(updatedJournal.getContent());
             existingJournal.setCreatedAt(updatedJournal.getCreatedAt());
             Journal saved = journalRepo.save(existingJournal);
 
-            // Clear old data
-            sentimentsRepo.deleteByJournal(existingJournal);
-            emotionsRepo.deleteByJournal(existingJournal);
-            journalKeywordsRepo.deleteByJournal(existingJournal);
-
-            // Re-analyze
-            SentimentAnalysisService.TextAnalysis analysis = sentimentAnalysisService
-                    .analyzeSentiment(saved.getContent());
-
-            // Save sentiment
-            Sentiments sentiment = new Sentiments();
-            sentiment.setJournal(saved);
-            sentiment.setLabel(analysis.getSentiment().getLabel());
-            sentiment.setScore(analysis.getSentiment().getScore());
-            sentimentsRepo.save(sentiment);
-
-            // Save emotions
-            for (SentimentAnalysisService.SentimentEmotionResult emo : analysis.getEmotions()) {
-                Emotions emotion = new Emotions();
-                emotion.setJournal(saved);
-                emotion.setLabel(emo.getLabel());
-                emotion.setScore(emo.getScore());
-                emotionsRepo.save(emotion);
-            }
-
-            // Save keywords
-            for (String keyword : analysis.getKeywords()) {
-                Keywords keywordEntity = keywordsRepo.findByWord(keyword)
-                        .orElseGet(() -> keywordsRepo.save(new Keywords(null, keyword)));
-
-                Journal_keywords link = new Journal_keywords(saved, keywordEntity);
-                journalKeywordsRepo.save(link);
+            if (contentChanged) {
+                // Clear old data for emotions and keywords, sentiment will be handled
+                // differently
+                // sentimentsRepo.deleteByJournal(existingJournal); // Remove this line
+                emotionsRepo.deleteByJournal(existingJournal);
+                journalKeywordsRepo.deleteByJournal(existingJournal);
+    
+                // Re-analyze
+                SentimentAnalysisService.TextAnalysis analysis = sentimentAnalysisService
+                        .analyzeSentiment(saved.getContent());
+    
+                // Save sentiment (update or create)
+                Sentiments sentiment = sentimentsRepo.findByJournal(saved)
+                        .orElse(new Sentiments()); // Get existing or create a new one if not found
+                sentiment.setJournal(saved); // Ensure journal is set (especially for new sentiment)
+                sentiment.setLabel(analysis.getSentiment().getLabel());
+                sentiment.setScore(analysis.getSentiment().getScore());
+                sentimentsRepo.save(sentiment); // This will perform an UPDATE or INSERT
+    
+                // Save emotions
+                for (SentimentAnalysisService.SentimentEmotionResult emo : analysis.getEmotions()) {
+                    Emotions emotion = new Emotions();
+                    emotion.setJournal(saved);
+                    emotion.setLabel(emo.getLabel());
+                    emotion.setScore(emo.getScore());
+                    emotionsRepo.save(emotion);
+                }
+    
+                // Save keywords
+                for (String keyword : analysis.getKeywords()) {
+                    Keywords keywordEntity = keywordsRepo.findByWord(keyword)
+                            .orElseGet(() -> keywordsRepo.save(new Keywords(null, keyword)));
+    
+                    Journal_keywords link = new Journal_keywords(saved, keywordEntity);
+                    journalKeywordsRepo.save(link);
+                }
             }
 
             return saved;
